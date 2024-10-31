@@ -4,13 +4,15 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.SimpleClientHttpRequestFactory
+import org.springframework.retry.annotation.EnableRetry
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientException
 import java.time.Duration
 
 private const val CONNECTION_TIMEOUT_SECONDS = 1L
-private const val READ_TIMEOUT_SECONDS = 5L
+private const val READ_TIMEOUT_SECONDS = 2L
 
+@EnableRetry
 @Configuration
 class RestClientConfig {
 
@@ -21,9 +23,8 @@ class RestClientConfig {
         simpleClientHttpRequestFactory.setConnectTimeout(Duration.ofSeconds(CONNECTION_TIMEOUT_SECONDS))
         simpleClientHttpRequestFactory.setReadTimeout(Duration.ofSeconds(READ_TIMEOUT_SECONDS))
 
-        return RestClient.builder()
-            .requestFactory(simpleClientHttpRequestFactory)
-            .defaultStatusHandler({ it.is4xxClientError || it.is5xxServerError }) { request, response ->
+        return restClientBuilder.requestFactory(simpleClientHttpRequestFactory)
+            .defaultStatusHandler({ it.isError || !it.is2xxSuccessful }) { request, response ->
                 log.error("http request fail.")
                 log.error("request: ${request.method} ${request.uri}")
                 log.error(

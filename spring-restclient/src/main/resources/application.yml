@@ -1,1 +1,5 @@
 spring.application.name: spring-restclient
+logging:
+  level:
+    org.springframework.retry: debug
+    com.sang5c.springrestclient.config.RestClientConfig: debug

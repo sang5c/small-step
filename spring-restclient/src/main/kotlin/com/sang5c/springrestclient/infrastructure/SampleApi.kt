@@ -1,7 +1,10 @@
 package com.sang5c.springrestclient.infrastructure
 
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
+import java.io.IOException
 
 @Component
 class SampleApi(
@@ -15,6 +18,14 @@ class SampleApi(
             .body(String::class.java)!!
     }
 
+    @Retryable(
+        maxAttempts = 5,
+        backoff = Backoff(
+            delay = 1000,
+            multiplier = 1.5,
+            maxDelay = 2000,
+        ),
+    )
     fun get400(): String {
         return restClient.get()
             .uri("http://localhost:8080/400")
